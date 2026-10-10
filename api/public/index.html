@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>BP Monitor</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 0 20px; }
+    h1 { margin-bottom: 24px; }
+
+    /* Form */
+    .form-row { display: flex; gap: 12px; margin-bottom: 12px; }
+    .form-row input { flex: 1; padding: 8px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px; }
+    button { padding: 8px 20px; font-size: 16px; cursor: pointer; }
+
+    /* Messages */
+    .success { color: green; margin: 8px 0; }
+    .error   { color: red;   margin: 8px 0; }
+    [hidden] { display: none; }
+
+    /* Reading list */
+    .reading-list { margin-top: 32px; }
+    .reading-item { padding: 12px; margin-bottom: 8px; border-radius: 4px; }
+
+    /* Colour categories */
+    .category-normal   { background: #d4edda; border-left: 4px solid green; }
+    .category-elevated { background: #fff3cd; border-left: 4px solid orange; }
+    .category-high     { background: #f8d7da; border-left: 4px solid red; }
+  </style>
+</head>
+<body>
+
+  <h1>BP Monitor</h1>
+
+  <form id="reading-form">
+    <div class="form-row">
+      <input id="systolic"  type="number" placeholder="Systolic">
+      <input id="diastolic" type="number" placeholder="Diastolic">
+      <input id="pulse"     type="number" placeholder="Pulse">
+    </div>
+    <button type="submit">Log Reading</button>
+  </form>
+
+  <p class="success" id="success-message" hidden>Reading saved!</p>
+  <p class="error"   id="error-message"   hidden>Please fill in all fields.</p>
+
+  <div class="reading-list" id="reading-list"></div>
+
+  <script>
+    const form       = document.getElementById('reading-form')
+    const successMsg = document.getElementById('success-message')
+    const errorMsg   = document.getElementById('error-message')
+    const list       = document.getElementById('reading-list')
+
+    function categorise(systolic, diastolic) {
+      if (systolic >= 130 || diastolic >= 80) return 'category-high'
+      if (systolic >= 120)                    return 'category-elevated'
+      return 'category-normal'
+    }
+
+    async function loadReadings() {
+      const res  = await fetch('/api/readings')
+      const data = await res.json()
+      list.innerHTML = data.map(r => {
+        const cat  = categorise(r.systolic, r.diastolic)
+        const date = new Date(r.timestamp).toLocaleDateString()
+        return `<div class="reading-item ${cat}">${r.systolic}/${r.diastolic} — pulse ${r.pulse} — ${date}</div>`
+      }).join('')
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault()
+      successMsg.hidden = true
+      errorMsg.hidden   = true
+
+      const systolic  = document.getElementById('systolic').value.trim()
+      const diastolic = document.getElementById('diastolic').value.trim()
+      const pulse     = document.getElementById('pulse').value.trim()
+
+      if (!systolic || !diastolic || !pulse) {
+        errorMsg.hidden = false
+        return
+      }
+
+      await fetch('/api/readings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          systolic:  Number(systolic),
+          diastolic: Number(diastolic),
+          pulse:     Number(pulse)
+        })
+      })
+
+      form.reset()
+      successMsg.hidden = false
+      await loadReadings()
+    })
+
+    loadReadings()
+  </script>
+
+</body>
+</html>
