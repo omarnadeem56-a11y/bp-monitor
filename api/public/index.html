@@ -4,46 +4,216 @@
   <meta charset="UTF-8">
   <title>BP Monitor</title>
   <style>
-    body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 0 20px; }
-    h1 { margin-bottom: 24px; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f6f9fc;
+      color: #1a1f36;
+      min-height: 100vh;
+      padding: 48px 20px;
+    }
+
+    .container { max-width: 560px; margin: 0 auto; }
+
+    @media (max-width: 480px) {
+      body { padding: 24px 16px; }
+      .form-row { flex-direction: column; }
+      .reading-item { flex-direction: column; align-items: flex-start; gap: 10px; }
+      .reading-item > div:last-child { align-self: flex-end; }
+      h1 { font-size: 20px; }
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.4px;
+      margin-bottom: 4px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: #6b7c93;
+      margin-bottom: 32px;
+    }
+
+    /* Card */
+    .card {
+      background: #fff;
+      border-radius: 8px;
+      border: 1px solid #e3e8ee;
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #6b7c93;
+      margin-bottom: 16px;
+    }
 
     /* Form */
-    .form-row { display: flex; gap: 12px; margin-bottom: 12px; }
-    .form-row input { flex: 1; padding: 8px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px; }
-    button { padding: 8px 20px; font-size: 16px; cursor: pointer; }
+    .form-row { display: flex; gap: 12px; margin-bottom: 16px; }
+
+    .field { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+
+    label { font-size: 13px; font-weight: 500; color: #3c4257; }
+
+    input[type=number] {
+      padding: 10px 12px;
+      font-size: 15px;
+      border: 1px solid #e3e8ee;
+      border-radius: 6px;
+      outline: none;
+      transition: border-color 0.15s;
+      -moz-appearance: textfield;
+      width: 100%;
+    }
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+    input[type=number]:focus { border-color: #635bff; box-shadow: 0 0 0 3px rgba(99,91,255,0.12); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-primary { background: #635bff; color: #fff; }
+    .btn-primary:hover { background: #5145e5; }
 
     /* Messages */
-    .success { color: green; margin: 8px 0; }
-    .error   { color: red;   margin: 8px 0; }
-    [hidden] { display: none; }
+    .message {
+      font-size: 13px;
+      padding: 10px 14px;
+      border-radius: 6px;
+      margin-top: 12px;
+    }
+    .success { background: #d4edda; color: #1a5c2a; }
+    .error   { background: #fdecea; color: #9b1c1c; }
+    [hidden] { display: none !important; }
 
     /* Reading list */
-    .reading-list { margin-top: 32px; }
-    .reading-item { padding: 12px; margin-bottom: 8px; border-radius: 4px; }
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #6b7c93;
+      margin-bottom: 12px;
+    }
 
-    /* Colour categories */
-    .category-normal   { background: #d4edda; border-left: 4px solid green; }
-    .category-elevated { background: #fff3cd; border-left: 4px solid orange; }
-    .category-high     { background: #f8d7da; border-left: 4px solid red; }
+    .reading-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      background: #fff;
+      border: 1px solid #e3e8ee;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+
+    .reading-left { display: flex; align-items: center; gap: 12px; }
+
+    .category-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .category-optimal     .category-dot { background: #1a9e5c; }
+    .category-normal      .category-dot { background: #43a047; }
+    .category-high-normal .category-dot { background: #f5a623; }
+    .category-stage1      .category-dot { background: #fb8c00; }
+    .category-stage2      .category-dot { background: #e53935; }
+    .category-severe      .category-dot { background: #b71c1c; }
+
+    .reading-values { font-size: 15px; font-weight: 600; }
+    .reading-meta   { font-size: 12px; color: #6b7c93; margin-top: 2px; }
+
+    .category-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .category-optimal     .category-badge { background: #d4edda; color: #1a5c2a; }
+    .category-normal      .category-badge { background: #e8f5e9; color: #2e7d32; }
+    .category-high-normal .category-badge { background: #fff8e1; color: #7d5a00; }
+    .category-stage1      .category-badge { background: #fff3cd; color: #e65100; }
+    .category-stage2      .category-badge { background: #fdecea; color: #9b1c1c; }
+    .category-severe      .category-badge { background: #f8d7da; color: #7f0000; }
+
+.delete-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #c1c9d2;
+      font-size: 16px;
+      padding: 4px 6px;
+      border-radius: 4px;
+      transition: color 0.15s;
+      line-height: 1;
+    }
+    .delete-btn:hover { color: #e53935; }
+
+    .empty-state {
+      text-align: center;
+      padding: 32px;
+      color: #6b7c93;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
+  <div class="container">
 
-  <h1>BP Monitor</h1>
-
-  <form id="reading-form">
-    <div class="form-row">
-      <input id="systolic"  type="number" placeholder="Systolic">
-      <input id="diastolic" type="number" placeholder="Diastolic">
-      <input id="pulse"     type="number" placeholder="Pulse">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:4px;">
+      <img src="/IMG_2951.jpg" alt="BP Monitor logo" style="width:48px;height:48px;object-fit:contain;border-radius:8px;">
+      <h1>BP Monitor</h1>
     </div>
-    <button type="submit">Log Reading</button>
-  </form>
+    <p class="subtitle">Track your blood pressure readings over time.</p>
 
-  <p class="success" id="success-message" hidden>Reading saved!</p>
-  <p class="error"   id="error-message"   hidden>Please fill in all fields.</p>
+    <div class="card">
+      <p class="card-title">Log a reading</p>
+      <form id="reading-form">
+        <div class="form-row">
+          <div class="field">
+            <label for="systolic">Systolic</label>
+            <input id="systolic" type="number" placeholder="120">
+          </div>
+          <div class="field">
+            <label for="diastolic">Diastolic</label>
+            <input id="diastolic" type="number" placeholder="80">
+          </div>
+          <div class="field">
+            <label for="pulse">Pulse</label>
+            <input id="pulse" type="number" placeholder="70">
+          </div>
+        </div>
+        <button class="btn btn-primary" type="submit">Log Reading</button>
+      </form>
+      <p class="message success" id="success-message" hidden>Reading saved successfully.</p>
+      <p class="message error"   id="error-message"   hidden>Please fill in all fields.</p>
+    </div>
 
-  <div class="reading-list" id="reading-list"></div>
+    <p class="section-title">History</p>
+    <div class="reading-list" id="reading-list"></div>
+
+  </div>
 
   <script>
     const form       = document.getElementById('reading-form')
@@ -51,19 +221,50 @@
     const errorMsg   = document.getElementById('error-message')
     const list       = document.getElementById('reading-list')
 
+    const LABELS = {
+      'category-optimal':     'Optimal',
+      'category-normal':      'Normal',
+      'category-high-normal': 'High Normal',
+      'category-stage1':      'Stage 1',
+      'category-stage2':      'Stage 2',
+      'category-severe':      'Severe'
+    }
+
     function categorise(systolic, diastolic) {
-      if (systolic >= 130 || diastolic >= 80) return 'category-high'
-      if (systolic >= 120)                    return 'category-elevated'
-      return 'category-normal'
+      if (systolic >= 180 || diastolic >= 120) return 'category-severe'
+      if (systolic >= 160 || diastolic >= 100) return 'category-stage2'
+      if (systolic >= 140 || diastolic >= 90)  return 'category-stage1'
+      if (systolic >= 130 || diastolic >= 85)  return 'category-high-normal'
+      if (systolic >= 120 || diastolic >= 80)  return 'category-normal'
+      return 'category-optimal'
     }
 
     async function loadReadings() {
       const res  = await fetch('/api/readings')
       const data = await res.json()
+
+      if (data.length === 0) {
+        list.innerHTML = '<div class="empty-state">No readings yet. Log one above.</div>'
+        return
+      }
+
       list.innerHTML = data.map(r => {
         const cat  = categorise(r.systolic, r.diastolic)
-        const date = new Date(r.timestamp).toLocaleDateString()
-        return `<div class="reading-item ${cat}">${r.systolic}/${r.diastolic} — pulse ${r.pulse} — ${date}</div>`
+        const date = new Date(r.timestamp).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+        return `
+          <div class="reading-item ${cat}" data-id="${r.id}">
+            <div class="reading-left">
+              <div class="category-dot"></div>
+              <div>
+                <div class="reading-values">${r.systolic}/${r.diastolic} <span style="font-weight:400;color:#6b7c93;">mmHg</span> &nbsp;·&nbsp; ❤️ ${r.pulse} <span style="font-weight:400;color:#6b7c93;">bpm</span></div>
+                <div class="reading-meta">${date}</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;">
+              <span class="category-badge">${LABELS[cat]}</span>
+              <button class="delete-btn" data-id="${r.id}" aria-label="Delete reading">✕</button>
+            </div>
+          </div>`
       }).join('')
     }
 
@@ -84,11 +285,7 @@
       await fetch('/api/readings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          systolic:  Number(systolic),
-          diastolic: Number(diastolic),
-          pulse:     Number(pulse)
-        })
+        body: JSON.stringify({ systolic: Number(systolic), diastolic: Number(diastolic), pulse: Number(pulse) })
       })
 
       form.reset()
@@ -96,8 +293,13 @@
       await loadReadings()
     })
 
+    list.addEventListener('click', async (e) => {
+      if (!e.target.classList.contains('delete-btn')) return
+      await fetch(`/api/readings/${e.target.dataset.id}`, { method: 'DELETE' })
+      await loadReadings()
+    })
+
     loadReadings()
   </script>
-
 </body>
 </html>

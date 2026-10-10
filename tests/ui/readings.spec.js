@@ -73,7 +73,7 @@ test.describe('Story 2.2 — View reading history', () => {
     await page.click('button[type="submit"]')
 
     await expect(page.locator('.reading-item')).toContainText(`${systolic}/${diastolic}`)
-    await expect(page.locator('.reading-item')).toContainText(`pulse ${pulse}`)
+    await expect(page.locator('.reading-item')).toContainText(`${pulse}`)
   })
 
 })
@@ -85,34 +85,59 @@ test.describe('Story 2.2 — View reading history', () => {
       await page.goto('/')                                                                                                                                                                               
     })                                                                                                                                                                                                 
 
-    test('normal reading is green', async ({ page }) => {
+    test('optimal reading', async ({ page }) => {
       await page.fill('#systolic', '110')
       await page.fill('#diastolic', '70')
+      await page.fill('#pulse', '70')
+      await page.click('button[type="submit"]')
+
+      await expect(page.locator('.reading-item')).toHaveClass('reading-item category-optimal')
+    })
+
+    test('normal reading', async ({ page }) => {
+      await page.fill('#systolic', '125')
+      await page.fill('#diastolic', '82')
       await page.fill('#pulse', '70')
       await page.click('button[type="submit"]')
 
       await expect(page.locator('.reading-item')).toHaveClass('reading-item category-normal')
     })
 
-    test('elevated reading is yellow', async ({ page }) => {
-      await page.fill('#systolic', '125')
-      await page.fill('#diastolic', '70')                                                                                                                                                                  
-      await page.fill('#pulse', '70')                                                                                                                                                                    
+    test('high normal reading', async ({ page }) => {
+      await page.fill('#systolic', '132')
+      await page.fill('#diastolic', '86')
+      await page.fill('#pulse', '70')
       await page.click('button[type="submit"]')
 
-      await expect(page.locator('.reading-item')).toHaveClass('reading-item category-elevated')
+      await expect(page.locator('.reading-item')).toHaveClass('reading-item category-high-normal')
     })
 
-    test('elevated reading is red', async ({ page }) => {
-    await page.fill('#systolic', '140')                                                                                                                                                                
-    await page.fill('#diastolic', '90')                                                                                                                                                                  
-    await page.fill('#pulse', '70')
-    await page.click('button[type="submit"]')                                                                                                                                                            
-                                                                                                                                                                                                       
-    await expect(page.locator('.reading-item')).toHaveClass('reading-item category-high')
+    test('stage 1 hypertension', async ({ page }) => {
+      await page.fill('#systolic', '145')
+      await page.fill('#diastolic', '92')
+      await page.fill('#pulse', '70')
+      await page.click('button[type="submit"]')
 
+      await expect(page.locator('.reading-item')).toHaveClass('reading-item category-stage1')
+    })
 
-  })
+    test('stage 2 hypertension', async ({ page }) => {
+      await page.fill('#systolic', '165')
+      await page.fill('#diastolic', '105')
+      await page.fill('#pulse', '70')
+      await page.click('button[type="submit"]')
+
+      await expect(page.locator('.reading-item')).toHaveClass('reading-item category-stage2')
+    })
+
+    test('severe hypertension', async ({ page }) => {
+      await page.fill('#systolic', '185')
+      await page.fill('#diastolic', '125')
+      await page.fill('#pulse', '70')
+      await page.click('button[type="submit"]')
+
+      await expect(page.locator('.reading-item')).toHaveClass('reading-item category-severe')
+    })
  })
   
 
