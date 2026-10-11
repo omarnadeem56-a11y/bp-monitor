@@ -8,10 +8,15 @@
 //   5. Starts the server
 
 const express = require('express')
+const cors = require('cors')
 const readingsRouter = require('./routes/readings')
 const store = require('./store')
 
 const app = express()
+
+// Allow requests from Expo Web (port 8081) and the web UI (same origin).
+// Without this the browser blocks cross-origin fetch calls.
+app.use(cors())
 
 // Parse incoming JSON request bodies
 // Without this, req.body would be undefined
@@ -43,8 +48,8 @@ if (process.env.NODE_ENV === 'test') {
 // Start the server
 const PORT = process.env.PORT || 3000
 
-const server = app.listen(PORT, '127.0.0.1', () => {
-  console.log(`API running on http://127.0.0.1:${PORT}`)
+const server = app.listen(PORT, () => {
+  console.log(`API running on http://localhost:${PORT}`)
 })
 
 // Export both app and server so Playwright can start/stop the server in tests
