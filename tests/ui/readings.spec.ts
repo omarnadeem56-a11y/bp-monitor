@@ -5,135 +5,113 @@ import { HistoryPage } from '../pages/HistoryPage'
 // ─── Story 2.1: Log a reading via form ───────────────────────────────────────
 
 test.describe('Story 2.1 — Log a reading via form', () => {
+  let log: LogPage
+
   test.beforeEach(async ({ request, page }) => {
     await request.post('/api/test/reset')
-    await page.goto('/')
+    log = new LogPage(page)
+    await log.goto()
   })
 
   test('has input fields for systolic, diastolic and pulse', async ({ page }) => {
-    await expect(page.locator('#systolic')).toBeVisible()
-    await expect(page.locator('#diastolic')).toBeVisible()
-    await expect(page.locator('#pulse')).toBeVisible()
+    await expect(log.systolicInput).toBeVisible()
+    await expect(log.diastolicInput).toBeVisible()
+    await expect(log.pulseInput).toBeVisible()
   })
 
   test('shows success on valid submission', async ({ page }) => {
-    await page.fill('#systolic', '120')
-    await page.fill('#diastolic', '80')
-    await page.fill('#pulse', '70')
-    await page.click('button[type="submit"]')
-
-    await expect(page.locator('#success-message')).toBeVisible()
+    await log.logReading(120, 80, 70)
+    await expect(log.successMessage).toBeVisible()
   })
 
   test('shows error on empty submit', async ({ page }) => {
-    await page.click('button[type="submit"]')
-
-    await expect(page.locator('#error-message')).toBeVisible()
+    await log.submit()
+    await expect(log.errorMessage).toBeVisible()
   })
 
   test('form clears after successful submission', async ({ page }) => {
-    await page.fill('#systolic', '120')
-    await page.fill('#diastolic', '80')
-    await page.fill('#pulse', '70')
-    await page.click('button[type="submit"]')
+    await log.fillForm(120, 80, 70)
+    await log.submit()
 
-    await expect(page.locator('#systolic')).toHaveValue('')
-    await expect(page.locator('#diastolic')).toHaveValue('')
-    await expect(page.locator('#pulse')).toHaveValue('')
+    await expect(log.systolicInput).toHaveValue('')
+    await expect(log.diastolicInput).toHaveValue('')
+    await expect(log.pulseInput).toHaveValue('')
   })
 })
 
 // ─── Story 2.2: View reading history ─────────────────────────────────────────
 
 test.describe('Story 2.2 — View reading history', () => {
+  let log: LogPage
+  let historyPage: HistoryPage
+
   test.beforeEach(async ({ request, page }) => {
     await request.post('/api/test/reset')
-    await page.goto('/')
+    log = new LogPage(page)
+    historyPage = new HistoryPage(page)
+    await log.goto()
   })
 
   test('history list shows after page loads', async ({ page }) => {
-    await expect(page.locator('#reading-list')).toBeAttached()
+      await expect(historyPage.readingList).toBeAttached()
   })
 
   test('new reading appears in history after submission', async ({ page }) => {
-    await page.fill('#systolic', '120')
-    await page.fill('#diastolic', '80')
-    await page.fill('#pulse', '70')
-    await page.click('button[type="submit"]')
+    await log.fillForm(120, 80, 70)
+    await log.submit()
 
-    await expect(page.locator('.reading-item')).toHaveCount(1)
+      await expect(historyPage.readings()).toHaveCount(1)
   })
 
   test('reading contains text for systolic, diastolic and pulse', async ({ page }) => {
-    await page.fill('#systolic', '120')
-    await page.fill('#diastolic', '80')
-    await page.fill('#pulse', '70')
-    await page.click('button[type="submit"]')
+    await log.fillForm(120, 80, 70);
+    await log.submit()
 
-    await expect(page.locator('.reading-item')).toContainText('120/80')
-    await expect(page.locator('.reading-item')).toContainText('70')
+    await expect(historyPage.readingAt(0)).toContainText('120/80')
+    await expect(historyPage.readingAt(0)).toContainText('70')
   })
 })
 
 // ─── Story 2.3: Reading categories ───────────────────────────────────────────
 
-test.describe('Story 2.3 — Reading categories', () => {
-  test.beforeEach(async ({ request, page }) => {
-    await request.post('/api/test/reset')
-    await page.goto('/')
+ test.describe('Story 2.3 — Reading categories', () => {
+    let log: LogPage
+    let historyPage: HistoryPage                                                                                                                                                                         
+   
+    test.beforeEach(async ({ request, page }) => {                                                                                                                                                       
+      await request.post('/api/test/reset')                                                                                                                                                            
+      log = new LogPage(page)
+      historyPage = new HistoryPage(page)
+      await log.goto()
+    })
+
+    test('optimal reading', async () => {
+      await log.logReading(110, 70, 70)
+      await expect(historyPage.readingAt(0)).toHaveClass('reading-item category-optimal')
+    })
+
+    test('normal reading', async () => {
+      await log.logReading(125, 82, 70)
+      await expect(historyPage.readingAt(0)).toHaveClass('reading-item category-normal')
+    })
+
+    test('high normal reading', async () => {
+      await log.logReading(132, 86, 70)
+      await expect(historyPage.readingAt(0)).toHaveClass('reading-item category-high-normal')
+    })
+
+    test('stage 1 hypertension', async () => {
+      await log.logReading(145, 92, 70)
+      await expect(historyPage.readingAt(0)).toHaveClass('reading-item category-stage1')
+    })
+
+    test('stage 2 hypertension', async () => {
+      await log.logReading(165, 105, 70)
+      await expect(historyPage.readingAt(0)).toHaveClass('reading-item category-stage2')
+    })
+
+    test('severe hypertension', async () => {
+      await log.logReading(185, 125, 70)
+      await expect(historyPage.readingAt(0)).toHaveClass('reading-item category-severe')
+    })
   })
-
-  test('optimal reading', async ({ page }) => {
-    await page.fill('#systolic', '110')
-    await page.fill('#diastolic', '70')
-    await page.fill('#pulse', '70')
-    await page.click('button[type="submit"]')
-
-    await expect(page.locator('.reading-item')).toHaveClass('reading-item category-optimal')
-  })
-
-  test('normal reading', async ({ page }) => {
-    await page.fill('#systolic', '125')
-    await page.fill('#diastolic', '82')
-    await page.fill('#pulse', '70')
-    await page.click('button[type="submit"]')
-
-    await expect(page.locator('.reading-item')).toHaveClass('reading-item category-normal')
-  })
-
-  test('high normal reading', async ({ page }) => {
-    await page.fill('#systolic', '132')
-    await page.fill('#diastolic', '86')
-    await page.fill('#pulse', '70')
-    await page.click('button[type="submit"]')
-
-    await expect(page.locator('.reading-item')).toHaveClass('reading-item category-high-normal')
-  })
-
-  test('stage 1 hypertension', async ({ page }) => {
-    await page.fill('#systolic', '145')
-    await page.fill('#diastolic', '92')
-    await page.fill('#pulse', '70')
-    await page.click('button[type="submit"]')
-
-    await expect(page.locator('.reading-item')).toHaveClass('reading-item category-stage1')
-  })
-
-  test('stage 2 hypertension', async ({ page }) => {
-    await page.fill('#systolic', '165')
-    await page.fill('#diastolic', '105')
-    await page.fill('#pulse', '70')
-    await page.click('button[type="submit"]')
-
-    await expect(page.locator('.reading-item')).toHaveClass('reading-item category-stage2')
-  })
-
-  test('severe hypertension', async ({ page }) => {
-    await page.fill('#systolic', '185')
-    await page.fill('#diastolic', '125')
-    await page.fill('#pulse', '70')
-    await page.click('button[type="submit"]')
-
-    await expect(page.locator('.reading-item')).toHaveClass('reading-item category-severe')
-  })
-})

@@ -18,4 +18,8 @@ export class HistoryPage {
   readingAt(index: number): Locator {
     return this.readings().nth(index)
   }
+
+  readingListIsVisible(): Promise<boolean> {
+    return this.page.locator('#reading-list').isVisible()
+  }
 }
